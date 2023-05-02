@@ -9,7 +9,7 @@
 #include <string>
 #include <sstream>
 
-#define MATRIX_WIDTH 100
+#define MATRIX_WIDTH 1000
 #define MATRIX_LENGTH (MATRIX_WIDTH * MATRIX_WIDTH)
 
 int main() {
@@ -89,7 +89,7 @@ int main() {
     kernel.setArg(3, MATRIX_WIDTH);
 
     std::cout << "Starting calc\n";
-    queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(MATRIX_LENGTH), cl::NullRange);
+    queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(MATRIX_WIDTH), cl::NullRange);
 
     std::cout << "Starting memory copy back\n";
 
@@ -99,6 +99,22 @@ int main() {
     catch (cl::Error& e) {
         std::cout << "Error: " << e.what() << " " << e.err() << "\n";
     }
+
+    // std::cout << "Stress test\n";
+
+    // while(1) {
+    //     std::cout << "Starting calc\n";
+    //     queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(MATRIX_WIDTH), cl::NullRange);
+
+    //     std::cout << "Starting memory copy back\n";
+
+    //     try {
+    //         queue.enqueueReadBuffer(d_c, CL_TRUE, 0, sizeof(float) * MATRIX_LENGTH, output);
+    //     }
+    //     catch (cl::Error& e) {
+    //         std::cout << "Error: " << e.what() << " " << e.err() << "\n";
+    //     }
+    // }
 
     // cl::copy(queue, d_c, output, output + (MATRIX_LENGTH));
     queue.finish();
