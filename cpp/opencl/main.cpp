@@ -1,17 +1,19 @@
 #define CL_HPP_ENABLE_EXCEPTIONS
-#define CL_USE_DEPRECATED_OPENCL_2_0_APIS
+// #define CL_USE_DEPRECATED_OPENCL_2_0_APIS
+#define CL_HPP_TARGET_OPENCL_VERSION 200
 
 #include <CL/opencl.hpp>
 #include <iostream>
 #include <vector>
 #include <cstdio>
+#include <cstdlib>
 #include <fstream>
 #include <string>
 #include <sstream>
 
 #define MATRIX_WIDTH 90
 #define MATRIX_LENGTH (MATRIX_WIDTH * MATRIX_WIDTH)
-#define RAND_MAX 100
+// #define RAND_MAX 100
 
 int main() {
 
@@ -23,11 +25,11 @@ int main() {
 
     int *output = new int[MATRIX_LENGTH];
 
-    srand(time(NULL));
+    std::srand(time(NULL));
 
     for (int i = 0; i < MATRIX_LENGTH; i++) {
-        h_a[i] = rand() / (float)RAND_MAX;
-        h_b[i] = rand() / (float)RAND_MAX;
+        h_a[i] = std::rand();
+        h_b[i] = std::rand();
     }
 
     std::cout << "Matrix A:\n";
@@ -77,15 +79,15 @@ int main() {
     cl::CommandQueue queue(context);
     // cl::Program program(context, cl_code.c_str(), true);
 
-    cl::Buffer d_a(context, h_a, (h_a + MATRIX_LENGTH), true);
-    cl::Buffer d_b(context, h_b, (h_b + MATRIX_LENGTH), true);
+    cl::Buffer d_a(context, CL_MEM_READ_ONLY, (sizeof(float) * MATRIX_LENGTH));
+    cl::Buffer d_b(context, CL_MEM_READ_ONLY, (sizeof(float) * MATRIX_LENGTH));
     cl::Buffer d_c(context, CL_MEM_WRITE_ONLY, (sizeof(float) * MATRIX_LENGTH) + 1);
 
     // cl::make_kernel<cl::Buffer, cl::Buffer, cl::Buffer, int> vec_add(program, "vec_add");
 
     std::cout << "Starting memory copy\n";
-    queue.enqueueWriteBuffer(d_a, CL_TRUE, 0, sizeof(float) * MATRIX_LENGTH, h_a);
-    queue.enqueueWriteBuffer(d_b, CL_TRUE, 0, sizeof(float) * MATRIX_LENGTH, h_b);
+    queue.enqueueWriteBuffer(d_a, CL_TRUE, 0, (sizeof(float) * MATRIX_LENGTH), h_a);
+    queue.enqueueWriteBuffer(d_b, CL_TRUE, 0, (sizeof(float) * MATRIX_LENGTH), h_b);
 
     cl::Kernel kernel(program, "matrixVectorMul");
 
@@ -95,21 +97,27 @@ int main() {
     kernel.setArg(3, MATRIX_WIDTH);
 
     std::cout << "Starting calc\n";
-    queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(MATRIX_LENGTH), cl::NullRange);
+
+    try {
+        queue.enqueueNDRangeKernel(kernel, 0, cl::NDRange(MATRIX_WIDTH));
+    }
+    catch (cl::Error& e) {
+        std::cout << "Kernel error: " << e.what() << " " << e.err() << "\n";
+    }
 
     std::cout << "Starting memory copy back\n";
 
-    queue.enqueueReadBuffer(d_c, CL_TRUE, 0, sizeof(float) * MATRIX_LENGTH, output);
+    // queue.enqueueReadBuffer(d_c, CL_TRUE, 0, sizeof(float) * MATRIX_LENGTH, output);
 
-    // try {
-    //     queue.enqueueReadBuffer(d_c, CL_TRUE, 0, sizeof(float) * MATRIX_LENGTH, output);
-    // }
-    // catch (cl::Error& e) {
-    //     std::cout << "Error: " << e.what() << " " << e.err() << "\n";
-    // }
+    try {
+        queue.enqueueReadBuffer(d_c, CL_TRUE, 0, sizeof(float) * MATRIX_LENGTH, output);
+    }
+    catch (cl::Error& e) {
+        std::cout << "Error: " << e.what() << " " << e.err() << "\n";
+    }
 
     // cl::copy(queue, d_c, output, output + (MATRIX_LENGTH));
-    queue.finish();
+    // queue.finish();
 
     std::cout << "Finished\n";
 

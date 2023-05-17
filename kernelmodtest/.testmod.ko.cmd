@@ -1,0 +1,1 @@
+cmd_/home/p7810456/kernelmodtest/testmod.ko := ld -r -m elf_x86_64 -z noexecstack --build-id=sha1  -T scripts/module.lds -o /home/p7810456/kernelmodtest/testmod.ko /home/p7810456/kernelmodtest/testmod.o /home/p7810456/kernelmodtest/testmod.mod.o;  true
