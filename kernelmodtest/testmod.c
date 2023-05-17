@@ -7,7 +7,7 @@ MODULE_DESCRIPTION("A simple hello world module");
 MODULE_VERSION("0.01");
 
 static int my_init(void) {
-    printk(KERN_INFO "Module loaded");
+    printk(KERN_INFO "Module loaded\n");
     return 0;
 }
 
